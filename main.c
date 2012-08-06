@@ -98,6 +98,11 @@ void display() {
 		vdp_increment_line();
 	}
 
+	for(y = 0; y < SCREEN_PAL_VERTICAL_BLANKING; y++) {
+		Z80ExecuteTStates(&context, TICKS_PER_LINE);
+		vdp_increment_line();
+	}
+
 	for(y = 0; y < SCREEN_PAL_TOP_BLANKING; y++) {
 		Z80ExecuteTStates(&context, TICKS_PER_LINE);
 		vdp_increment_line();
@@ -107,8 +112,6 @@ void display() {
 		Z80ExecuteTStates(&context, TICKS_PER_LINE);
 		vdp_increment_line();
 	}
-
-	//Z80ExecuteTStates();
 
 	updateTexture();
   updateFPS();
@@ -174,6 +177,7 @@ int main( int argc, char **argv ) {
 	fclose(f);
 
   init_emulator();
+	vdp_init(screen);
 
 	// Setup OpenGL
 	glutInit( &argc, argv );

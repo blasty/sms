@@ -12,6 +12,7 @@ u8 reg_vdp_data = 0;
 u8 vdp_regs[12];
 u8 vcounter=0, hcounter=0;
 u16 line=0;
+u32 *fb;
 
 static u8 vram[ 0x4000 ];
 static u8 cram[ 0x4000 ];
@@ -76,23 +77,27 @@ u8 vdp_vcounter() { return vcounter; }
 u8 vdp_hcounter() { return hcounter; }
 
 u32 sms2rgb(u8 col) {
+	u8 r,g,b;
+
 	r = ((col>>0)&3) << 6;
 	g = ((col>>2)&3) << 6;
 	b = ((col>>4)&3) << 6;
 
-	return (b<<16) | (g<<8) | r;
+	return (r<<16) | (g<<8) | b;
 }
 
 void vdp_draw_line() {
+	int i;
+	u32 *line_ptr = fb+(line*256);
 	// background
-		
+	for(i=0;i<256;i++)
+		*line_ptr++ = sms2rgb(line ^ i);
 
 	// sprites
 }
 
 void vdp_increment_line() {
 	line++;
-
 	if (line == SCREEN_PAL_LINES)
 		line=0;
 
@@ -100,4 +105,8 @@ void vdp_increment_line() {
 		vcounter = vdp_regs[0x0a];
 	else
 		vcounter--;
+}
+
+void vdp_init(u32 *fb_addr) {
+	fb = fb_addr;
 }

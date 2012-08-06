@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+void vdp_init(u32 *fb_addr);
+
 void vdp_write(u8 data);
 void vdp_reg_write(u8 addr, u8 data);
 
