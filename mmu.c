@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "mmu.h"
 #include "types.h"
 #include "io.h"
+#include "vdp.h"
 
 /* 64Kb of RAM */
 static u8 memory[ 0x10000 ];
@@ -10,7 +12,7 @@ u8 *mmu_mem_get() {
 	return memory;
 }
 
-u8 mmu_mem_read(int param, u16 a) {
+u8 mmu_mem_read(u16 a) {
 	printf("mem_read[%04x] ", a);
 
 	if (a <= 0xbfff) {
@@ -32,7 +34,7 @@ u8 mmu_mem_read(int param, u16 a) {
 	exit(-1);
 }
 
-void mmu_mem_write(int param, u16 a, u8 data) {
+void mmu_mem_write(u16 a, u8 data) {
 	printf("mem_write[%04x] = %02x ", a, data);
 	if (a<= 0xbfff) {
 		printf("ROM. ILLEGAL!\n"); exit(-1);
@@ -53,64 +55,62 @@ void mmu_mem_write(int param, u16 a, u8 data) {
 	printf("UNHANDLED\n");
 }
 
- u8 mmu_io_read(int param, u16 address) {
+u8 mmu_io_read(u16 address) {
 	address &= 0xff;
 	printf("IO_READ  %04x ", address);
 
 	switch(address) {
 		case IO_JOYPAD1:
 		case IO_JOYPAD2:
-			printf("joypad%d", address-IO_JOYPAD1);
+			printf("joypad%d\n", address-IO_JOYPAD1);
 		break;
 
 		case IO_REGION:
-			printf("region");
+			printf("region\n");
 		break;
 
 		case IO_COUNT_V:
-			printf("vcount");
+			printf("vcount\n");
 			return vdp_vcounter(); 
 		break;
 
 		case IO_PSG_OUT:
-			printf("hcounter");
+			printf("hcounter\n");
 			return vdp_hcounter();
 		break;
 
 		case IO_VDP_DATA:
-			printf("vdp_data");
+			printf("vdp_data\n");
 			return vdp_get_data();
 		break;
 
 		case IO_VDP_ADDR:
 		case IO_VDP_MIRR:
-			printf("vdp_addr/vdp_stat");
-			return vdp_get_addr();
+			printf("vdp_addr/vdp_stat\n");
+			return vdp_get_stat();
 		break;
 
 		case IO_YM_ADDR:
-			printf("ym_addr");
+			printf("ym_addr\n");
 		break;
 
 		case IO_YM_DATA:
-			printf("ym_data");
+			printf("ym_data\n");
 		break;
 
 		case IO_YM_CR:
-			printf("ym_cr");
+			printf("ym_cr\n");
 		break;
 
 		default:
-  		printf("UNKNOWN!");
+  		printf("UNKNOWN!\n");
 		break;
 	}
-
-	printf("\n");
 
 	return rand() & 0xff;
 }
 
- void mmu_io_write(int param, u16 address, u8 data) {
+void mmu_io_write(u16 address, u8 data) {
 	address &= 0xff;
 
 	printf("IO_write[%02x=%02x] ", address, data);
@@ -131,6 +131,7 @@ void mmu_mem_write(int param, u16 a, u8 data) {
 
 		case IO_VDP_DATA:
 			printf("vdp_data");
+			vdp_set_data(data);
 		break;
 
 		case IO_VDP_ADDR:
@@ -157,3 +158,10 @@ void mmu_mem_write(int param, u16 a, u8 data) {
 
 	printf("\n");
 }
+
+/*
+u8 mmu_int_read(Z80EX_CONTEXT *cpu, void *user_data) {
+	printf("!!!!!! INT READ1\n");
+	return 0xFF;
+}
+*/

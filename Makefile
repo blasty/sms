@@ -1,5 +1,6 @@
 CC := gcc
-LIBS := -lz80
+LIBS := -lglut -lGLU
+#OSX := -framework GLUT -framework OpenGL
 
 all:
-	$(CC) -framework GLUT -framework OpenGL -o emu mmu.c key.c vdp.c main.c $(LIBS)
+	$(CC) $(OSX) -DLSB_FIRST -Wall -o emu z80.c mmu.c key.c vdp.c main.c $(LIBS)
