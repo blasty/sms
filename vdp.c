@@ -10,7 +10,7 @@
 u8 vdp_addr_high = 0;
 u16 reg_vdp_addr = 0;
 u16 reg_vdp_code = 0;
-u16 map_addr=0, tile_addr=0x00, pal_addr=0;
+u16 map_addr=0, tile_addr=0x3800, pal_addr=0;
 u8 reg_vdp_data = 0, reg_vdp_stat = 0;
 u8 vdp_regs[12] = { 0x36, 0x80, 0xff, 0xff, 0xff, 0xff, 0xfb, 0xff, 0 };
 u8 vcounter=0, hcounter=0;
@@ -29,28 +29,10 @@ void vdp_write(u8 data) {
 		reg_vdp_code = (data >> 6);
 		printf("vdp_addr = 0x%04x action:", reg_vdp_addr);
 
-		switch(reg_vdp_code) {
-			case 0:
-				printf("vram_read(%04x)", reg_vdp_addr);
-				reg_vdp_data = vram[reg_vdp_addr];
-				reg_vdp_addr++;
-				reg_vdp_addr &= 0x3fff;
-			break;
-			case 1:
-				printf("vram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
-				vram[reg_vdp_addr] = reg_vdp_data; 
-				reg_vdp_addr++;
-				reg_vdp_addr &= 0x3fff;
-			break;
-			case 2:
-				vdp_reg_write((reg_vdp_addr >> 8) & 0xf, reg_vdp_addr & 0xff);
-			break;
-			case 3:
-				printf("cram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
-				cram[reg_vdp_addr] = reg_vdp_data;
-				reg_vdp_addr++;
-				reg_vdp_addr &= 0x3fff;
-			break;
+		if (reg_vdp_code == 0) {
+			reg_vdp_data = vram[reg_vdp_addr];
+			reg_vdp_addr++;	
+			reg_vdp_addr &= 0x3fff;
 		}
 
 		vdp_addr_high = 0;
@@ -114,6 +96,30 @@ void vdp_set_stat(u8 v) {
 
 void vdp_set_data(u8 v) {
 	reg_vdp_data = v;
+
+	switch(reg_vdp_code) {
+		case 0:
+			printf("vram_read(%04x)", reg_vdp_addr);
+		break;
+		case 1:
+			printf("vram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
+			vram[reg_vdp_addr] = reg_vdp_data; 
+			reg_vdp_addr++;
+			reg_vdp_addr &= 0x3fff;
+		break;
+
+		case 2:
+			vdp_reg_write((reg_vdp_addr >> 8) & 0xf, reg_vdp_addr & 0xff);
+		break;
+
+		case 3:
+			printf("cram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
+			cram[reg_vdp_addr] = reg_vdp_data;
+			reg_vdp_addr++;
+			reg_vdp_addr &= 0x3fff;
+		break;
+	}
+
 }
 
 u8 vdp_vcounter() { return vcounter; }
@@ -173,7 +179,7 @@ void vdp_draw_line() {
 		}
 	}
 
-	if (line==224) tile_addr+=0x10;
+	//if (line==224) tile_addr+=0x10;
 
 	// sprites
 }
