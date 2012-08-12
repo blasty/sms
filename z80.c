@@ -3457,7 +3457,7 @@ int z80_execute(int cycles)
     if (z80_ICount > 0)
     {
       R++;
-      printf("PC=%08x\n", PC);
+      //printf("PC=%08x\n", PC);
       EXEC_INLINE(op,ROP());
     }
   } 

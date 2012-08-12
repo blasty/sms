@@ -18,6 +18,7 @@
 #define IO_VDP_MIRR 0xbd
 #define IO_VDP_ADDR	0xbf
 #define IO_VDP_STAT	0xbf
+#define IO_VDP_CR 	0xbf
 
 #define IO_YM_ADDR	0xf0
 #define IO_YM_DATA	0xf1

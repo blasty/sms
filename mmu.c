@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mmu.h"
 #include "types.h"
 #include "io.h"
@@ -7,6 +8,16 @@
 
 /* 64Kb of RAM */
 static u8 memory[ 0x10000 ];
+static u8 wram[0x2000];
+
+void mmu_init() {
+	//memset(memory, 0, 0x10000);
+	memset(wram, 0, 0x2000);
+}
+
+u8 *mmu_wram_get() {
+	return wram;
+}
 
 u8 *mmu_mem_get() {
 	return memory;
@@ -22,37 +33,41 @@ u8 mmu_mem_read(u16 a) {
 
 	if (a >= 0xc000 && a<= 0xdfff) {
 		printf("RAM\n");
-		return memory[a-0xc000];
+		return wram[a-0xc000];
 	}
 
 	if (a >= 0xe000) {
 		printf("RAM (mirror)\n");
-		return memory[a-0xe000];
+		return wram[a-0xe000];
 	}
 
 	printf("WTF\n");
 	exit(-1);
 }
 
-void mmu_mem_write(u16 a, u8 data) {
+void mmu_mem_write(int a, int data) {
+	a &= 0xffff;
+	data &= 0xff;
+
 	printf("mem_write[%04x] = %02x ", a, data);
 	if (a<= 0xbfff) {
-		printf("ROM. ILLEGAL!\n"); exit(-1);
+		printf("ROM. ILLEGAL!\n"); // exit(-1);
 	}
 
-	if (a >= 0xc000 && a<= 0xcfff) {
-		memory[a] = data;
+	if (a >= 0xc000 && a<= 0xdfff) {
+		wram[a-0xc000] = data;
 		printf("RAM\n");
 		return;
 	}
 
 	if (a >= 0xe000) {
-		memory[a-0x2000] = data;
+		wram[a-0xe000] = data;
 		printf("RAM (mirror)\n");
 		return;
 	}
 
 	printf("UNHANDLED\n");
+	//exit(-1);
 }
 
 u8 mmu_io_read(u16 address) {
@@ -63,50 +78,39 @@ u8 mmu_io_read(u16 address) {
 		case IO_JOYPAD1:
 		case IO_JOYPAD2:
 			printf("joypad%d\n", address-IO_JOYPAD1);
+			return 0;
 		break;
 
 		case IO_REGION:
-			printf("region\n");
-		break;
-
-		case IO_COUNT_V:
-			printf("vcount\n");
-			return vdp_vcounter(); 
-		break;
-
-		case IO_PSG_OUT:
-			printf("hcounter\n");
-			return vdp_hcounter();
+			printf("region -- ");
 		break;
 
 		case IO_VDP_DATA:
-			printf("vdp_data\n");
-			return vdp_get_data();
-		break;
-
 		case IO_VDP_ADDR:
 		case IO_VDP_MIRR:
-			printf("vdp_addr/vdp_stat\n");
-			return vdp_get_stat();
+		case IO_COUNT_V:
+		case IO_COUNT_H:
+			return vdp_io_read(address);
 		break;
 
 		case IO_YM_ADDR:
-			printf("ym_addr\n");
+			printf("ym_addr -- ");
 		break;
 
 		case IO_YM_DATA:
-			printf("ym_data\n");
+			printf("ym_data -- ");
 		break;
 
 		case IO_YM_CR:
-			printf("ym_cr\n");
+			printf("ym_cr -- ");
 		break;
 
 		default:
-  		printf("UNKNOWN!\n");
+  		printf("[%02x] UNKNOWN! ", address);
 		break;
 	}
 
+	printf("OMG\n");
 	return rand() & 0xff;
 }
 
@@ -129,14 +133,10 @@ void mmu_io_write(u16 address, u8 data) {
 			printf("psg_out");
 		break;
 
-		case IO_VDP_DATA:
-			printf("vdp_data");
-			vdp_set_data(data);
-		break;
-
 		case IO_VDP_ADDR:
 		case IO_VDP_MIRR:
-			vdp_write(data);
+		case IO_VDP_DATA:
+			vdp_io_write(address, data);
 		break;
 
 		case IO_YM_ADDR:
@@ -153,6 +153,7 @@ void mmu_io_write(u16 address, u8 data) {
 
 		default:
   		printf("UNKNOWN!");
+			//exit(-1);
 		break;
 	}
 

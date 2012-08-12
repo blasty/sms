@@ -35,8 +35,6 @@ u32 waitTime = 1000/60;
 u32 frameStartTime = 0;
 signed int delayTime;
 
-static Z80EX_CONTEXT *cpu;
-
 void updateFPS() {
 	if( ( glutGet( GLUT_ELAPSED_TIME )-lastFps ) > 1000 ) {
 		static char buffer[20] = {0};
@@ -91,7 +89,7 @@ void updateTexture() {
 }
 
 void display() {
-	int y, total;
+	int y;
 
 	glClear( GL_COLOR_BUFFER_BIT );
 
@@ -109,7 +107,7 @@ void display() {
 
 	if (vdp_reg_read(1) & 0x20) {
 		printf("!!!!! TRIGGERING VBL.. 0x%x -> ", z80_get_elapsed_cycles());
-		vdp_set_stat(vdp_get_stat() | 0x80);
+		vdp_set_cr(vdp_get_cr() | 0x80);
 		z80_set_irq_line(0, ASSERT_LINE);
 		printf("0x%x\n", z80_get_elapsed_cycles());
 	}
@@ -166,7 +164,7 @@ int sms_irq_callback() {
 }
 
 void init_emulator() {
-	u8 *m;
+	u8 *m, *r;
 	int i;
 
 	/*
@@ -187,7 +185,10 @@ void init_emulator() {
 	cpu_writeport16 = mmu_io_write;
 	cpu_writemem16 = mmu_mem_write;
 
+	mmu_init();
+
 	m = mmu_mem_get();
+	r = mmu_wram_get();
 
 	// internal ROM (0000-BFFF)
 	for(i = 0; i < 0x30; i++) {
@@ -197,8 +198,12 @@ void init_emulator() {
 
 	// internal RAM (C000-FFFF)
 	for(i = 0x30; i < 0x40; i++) {
-		cpu_readmap[i] = m + (i << 10);
-		cpu_writemap[i] = m + (i << 10);
+		cpu_readmap[i] = r + ((i-0x30) << 10);
+		cpu_writemap[i] = r + ((i-0x30) << 10);
+	}
+	for(i = 0x38; i < 0x40; i++) {
+		cpu_readmap[i] = r + ((i-0x38) << 10);
+		cpu_writemap[i] = r + ((i-0x38) << 10);
 	}
 
 	//data_bus_pullup = 0;

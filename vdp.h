@@ -5,13 +5,17 @@
 
 void vdp_init(u32 *fb_addr);
 
-void vdp_write(u8 data);
+void vdp_clear_addrhigh();
+void vdp_addr_write(u8 data);
 void vdp_reg_write(u8 addr, u8 data);
 u8 vdp_reg_read(int n);
 
+void vdp_io_write(u8 reg, u8 data);
+u8 vdp_io_read(u8 reg);
+
 u8 vdp_get_data();
-u8 vdp_get_stat();
-void vdp_set_stat(u8 v);
+u8 vdp_get_cr();
+void vdp_set_cr(u8 v);
 void vdp_draw_line();
 void vdp_increment_line();
 

@@ -5,37 +5,147 @@
 #include "types.h"
 #include "vdp.h"
 #include "constants.h"
+#include "io.h"
+
+u8 vc_table[313]={
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+  0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
+  0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
+  0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+  0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
+  0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F,
+  0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F,
+  0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF,
+  0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF,
+  0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF,
+  0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF,
+  0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF,
+  0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF,
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
+              0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF,
+  0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF,
+  0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF
+};
 
 /* VDP */
 u8 vdp_addr_high = 0;
+u8 vdp_buffer = 0;
+u8 vdp_backdrop_col = 0;
 u16 reg_vdp_addr = 0;
 u16 reg_vdp_code = 0;
-u16 map_addr=0, tile_addr=0x3800, pal_addr=0;
-u8 reg_vdp_data = 0, reg_vdp_stat = 0;
+u16 map_addr=0, tile_addr=0x00, pal_addr=0;
+u16 vdp_sprite_attr_addr = 0, vdp_sprite_tile_addr = 0;
+u8 reg_vdp_data = 0, reg_vdp_cr = 0;
 u8 vdp_regs[12] = { 0x36, 0x80, 0xff, 0xff, 0xff, 0xff, 0xfb, 0xff, 0 };
 u8 vcounter=0, hcounter=0;
+u8 vdp_bg_xscroll=0, vdp_bg_yscroll=0;
+u8 vdp_vram_buf=0;
 u16 line=0;
 u32 *fb;
 
 static u8 vram[ 0x4000 ];
 static u8 cram[ 0x4000 ];
 
-void vdp_write(u8 data) {
-	if (vdp_addr_high == 0) {
-		reg_vdp_addr = data;
-		vdp_addr_high = 1;
-	} else {
-		reg_vdp_addr |= (data & 0x3f)<<8;
-		reg_vdp_code = (data >> 6);
-		printf("vdp_addr = 0x%04x action:", reg_vdp_addr);
+u8 vdp_io_read(u8 addr) {
+	u8 ret;
 
-		if (reg_vdp_code == 0) {
-			reg_vdp_data = vram[reg_vdp_addr];
-			reg_vdp_addr++;	
+	switch(addr) {
+		case IO_COUNT_V:
+			return vcounter;
+		break;
+
+		case IO_COUNT_H:
+			return hcounter;
+		break;
+
+		case IO_VDP_DATA:
+			ret = vdp_buffer;
+
+			vdp_buffer = vram[reg_vdp_addr];
+			reg_vdp_addr++;
 			reg_vdp_addr &= 0x3fff;
-		}
 
-		vdp_addr_high = 0;
+			vdp_addr_high = 0;
+			return ret;
+		break;
+
+		case IO_VDP_CR:
+			ret = reg_vdp_cr;
+			reg_vdp_cr = 0;
+			vdp_addr_high = 0;
+			return ret;
+		break;
+
+		default:
+			printf("Unimplemented vdp I/O!\n");
+			exit(-1);
+		break;
+	}
+
+	return 0;
+}
+
+void vdp_io_write(u8 addr, u8 data) {
+	switch(addr) {
+		case IO_COUNT_V:
+			printf("VCOUNT WRITE WTF\n"); exit(-1);
+		break;
+
+		case IO_COUNT_H:
+			printf("HCOUNT WRITE WTF\n"); exit(-1);
+		break;
+
+		case IO_VDP_DATA:
+			switch(reg_vdp_code) {
+				case 0:
+				case 1:
+				case 2:
+					printf("vram_write(%04x, %02x)\n", reg_vdp_addr, data);
+					vram[reg_vdp_addr] = data;
+					vdp_buffer = data;
+					reg_vdp_addr++;
+					reg_vdp_addr &= 0x3fff;
+				break;
+
+				case 3:
+					printf("cram_write(%04x, %02x)\n", reg_vdp_addr, data);
+					cram[reg_vdp_addr] = data;
+					vdp_buffer = data;
+					reg_vdp_addr++;
+					reg_vdp_addr &= 0x3fff;
+				break;
+			}
+			vdp_addr_high = 0;
+		break;
+
+		case IO_VDP_CR:
+			printf("vdp_cr_write=%02x\n", data);
+			if (vdp_addr_high == 0) {
+				reg_vdp_addr &= 0x3f00;
+				reg_vdp_addr |= data;	
+				vdp_addr_high = 1;
+			} else {
+				reg_vdp_addr &= 0xff;
+			 	reg_vdp_addr |= (data&0x3f)<<8;
+				reg_vdp_code = (data>>6);
+
+				if (reg_vdp_code == 2) {
+					vdp_reg_write((reg_vdp_addr >> 8)&0xf, reg_vdp_addr & 0xff);
+				} else {
+					vdp_buffer = vram[reg_vdp_addr];
+					reg_vdp_addr++;
+					reg_vdp_addr &= 0x3fff;
+				}
+			}
+		break;
+
+		default:
+			printf("Unimplemented vdp I/O!\n");
+			exit(-1);
+		break;
 	}
 }
 
@@ -43,8 +153,6 @@ u8 vdp_reg_read(int n) {
 	if (n >= 11) { printf(" ILLEGAL!"); exit(-1); }
 	return vdp_regs[n];
 }
-
-
 
 void vdp_reg_write(u8 addr, u8 data) {
 	printf("vdp_reg_write(addr:%x, data:%02x)", addr, data);
@@ -59,12 +167,33 @@ void vdp_reg_write(u8 addr, u8 data) {
 			map_addr = 0x3800;
 		break;
 
+		case 0x03:
+			pal_addr = (data << 6) & 0x3fc0;
+		break;
+
 		case 0x04:
 			tile_addr = (data << 11) & 0x3800;
+			printf("TILE_ADDR=%04x\n", tile_addr);
 		break;
 
 		case 0x05:
-			
+			vdp_sprite_attr_addr = ((data>>1)&0x3f) << 8;
+		break;
+
+		case 0x06:
+			vdp_sprite_tile_addr = ((data>>2)&1)<<13;
+		break;
+
+		case 0x07:
+			vdp_backdrop_col = data & 0xf;
+		break;
+
+		case 0x08:
+			vdp_bg_xscroll = data;
+		break;
+
+		case 0x09:
+			vdp_bg_yscroll = data;
 		break;
 
 		case 0x0a:
@@ -82,48 +211,17 @@ void vdp_reg_write(u8 addr, u8 data) {
 	vdp_regs[addr] = data;
 }
 
-u8 vdp_get_data() {
-	return reg_vdp_data;
+void vdp_clear_addrhigh() {
+	vdp_addr_high=0;	
 }
 
-u8 vdp_get_stat() {
-	return reg_vdp_stat;
+u8 vdp_get_cr() {
+	return reg_vdp_cr;
 }
 
-void vdp_set_stat(u8 v) {
-	reg_vdp_stat = v;
+void vdp_set_cr(u8 v) {
+	reg_vdp_cr = v;
 }
-
-void vdp_set_data(u8 v) {
-	reg_vdp_data = v;
-
-	switch(reg_vdp_code) {
-		case 0:
-			printf("vram_read(%04x)", reg_vdp_addr);
-		break;
-		case 1:
-			printf("vram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
-			vram[reg_vdp_addr] = reg_vdp_data; 
-			reg_vdp_addr++;
-			reg_vdp_addr &= 0x3fff;
-		break;
-
-		case 2:
-			vdp_reg_write((reg_vdp_addr >> 8) & 0xf, reg_vdp_addr & 0xff);
-		break;
-
-		case 3:
-			printf("cram_write(%04x, %02x)", reg_vdp_addr, reg_vdp_data);
-			cram[reg_vdp_addr] = reg_vdp_data;
-			reg_vdp_addr++;
-			reg_vdp_addr &= 0x3fff;
-		break;
-	}
-
-}
-
-u8 vdp_vcounter() { return vcounter; }
-u8 vdp_hcounter() { return hcounter; }
 
 u32 sms2rgb(u8 col) {
 	u8 r,g,b;
@@ -137,7 +235,8 @@ u32 sms2rgb(u8 col) {
 
 unsigned int get_tile(int idx, int y) {
 	int a  = tile_addr + (idx*32) + (y*4);
-
+	//printf("GET_TILE(%d, %d)\n", idx, y);
+	//return (vram[a+0]<<24) | (vram[a+1]<<16) | (vram[a+2]<<8) | vram[a+3];
 	return (vram[a+3]<<24) | (vram[a+2]<<16) | (vram[a+1]<<8) | vram[a];
 }
 
@@ -152,7 +251,6 @@ u8 lolpal[16]={
 	COL(0xff,0x00,0xff),
 	COL(0x00,0xff,0xff),
 	COL(0xff,0xff,0xff),
-
 	COL(0x00,0x00,0x00),
 	COL(0x80,0x00,0x00),
 	COL(0x00,0x80,0x00),
@@ -164,35 +262,47 @@ u8 lolpal[16]={
 };
 
 void vdp_draw_line() {
-	int i, j;
+	int idx, i, j, n, pal;
 	u32 v;
-	u8 *bb = &v;
+	u16 m=0;
+	u8 *bb = (u8*)&v;
+
 	u32 *line_ptr = fb+(line*256);
 
 	// background
 	for(i=0;i<256/8;i++) {
-		v = get_tile(i, line%8);
+		//v = get_tile((line/8) * 32 + i, line%8);
+		idx = ((line/8) * 32) + i;
+		idx *= 2;
+		idx += map_addr;
+		m = ((vram[idx+0] << 8) | vram[idx+1]);
+		v = get_tile(m & 0x1ff, line%8);
+		pal = (m >> 11) & 1;
+		pal *= 16;
 
 		for(j=0; j<4; j++) {
-			*line_ptr++ = sms2rgb(lolpal[ bb[j]>>4 ]);
-			*line_ptr++ = sms2rgb(lolpal[ bb[j]&15 ]);
+			*line_ptr++ = sms2rgb(cram[ pal + (bb[j]>>4) ]);
+			*line_ptr++ = sms2rgb(cram[ pal + (bb[j]&15) ]);
 		}
 	}
 
 	//if (line==224) tile_addr+=0x10;
-
 	// sprites
 }
 
 void vdp_increment_line() {
 	line++;
+
+	if (line == SCREEN_H_SMS+SCREEN_PAL_BOTTOM_BORDER)
+		vdp_regs[1] |= 0x20;		
+
 	if (line == SCREEN_PAL_LINES)
 		line=0;
 
+	vcounter = vc_table[line];
+
 	if (vcounter == 0)
 		vcounter = vdp_regs[0x0a];
-	else
-		vcounter--;
 }
 
 void vdp_init(u32 *fb_addr) {
